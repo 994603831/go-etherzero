@@ -216,36 +216,36 @@ func (mm *MasternodeManager) masternodeLoop() {
 			}
 			stateDB, _ := mm.blockchain.State()
 			for _, account := range mm.masternodeAccounts {
-				address := account.address
-				if stateDB.GetBalance(address).Cmp(big.NewInt(1e+16)) < 0 {
-					fmt.Println(logTime, "Expect to deposit 0.01 etz to ", address.String())
-					continue
+				if account.isActive {
+					address := account.address
+					if stateDB.GetBalance(address).Cmp(big.NewInt(1e+16)) < 0 {
+						fmt.Println(logTime, "Expect to deposit 0.01 etz to ", address.String())
+						continue
+					}
+					if stateDB.GetPower(address, mm.blockchain.CurrentBlock().Number()).Cmp(minPower) < 0 {
+						fmt.Println(logTime, "Insufficient power for ping transaction.", address.Hex(), mm.blockchain.CurrentBlock().Number().String(), stateDB.GetPower(address, mm.blockchain.CurrentBlock().Number()).String())
+						continue
+					}
+					tx := types.NewTransaction(
+						mm.txPool.State().GetNonce(address),
+						params.MasterndeContractAddress,
+						big.NewInt(0),
+						90000,
+						big.NewInt(20e+9),
+						nil,
+					)
+					signed, err := types.SignTx(tx, types.NewEIP155Signer(mm.blockchain.Config().ChainID), mm.masternodeKeys[account.id])
+					if err != nil {
+						fmt.Println(logTime, "SignTx error:", err)
+						continue
+					}
+					if err := mm.txPool.AddLocal(signed); err != nil {
+						fmt.Println(logTime, "send ping to txpool error:", err)
+						continue
+					}
+					fmt.Println(logTime, "Send ping message!", address.String())
 				}
-				if stateDB.GetPower(address, mm.blockchain.CurrentBlock().Number()).Cmp(minPower) < 0 {
-					fmt.Println(logTime, "Insufficient power for ping transaction.", address.Hex(), mm.blockchain.CurrentBlock().Number().String(), stateDB.GetPower(address, mm.blockchain.CurrentBlock().Number()).String())
-					continue
-				}
-				tx := types.NewTransaction(
-					mm.txPool.State().GetNonce(address),
-					params.MasterndeContractAddress,
-					big.NewInt(0),
-					90000,
-					big.NewInt(20e+9),
-					nil,
-				)
-				signed, err := types.SignTx(tx, types.NewEIP155Signer(mm.blockchain.Config().ChainID), mm.masternodeKeys[account.id])
-				if err != nil {
-					fmt.Println(logTime, "SignTx error:", err)
-					continue
-				}
-				if err := mm.txPool.AddLocal(signed); err != nil {
-					fmt.Println(logTime, "send ping to txpool error:", err)
-					continue
-				}
-				fmt.Println(logTime, "Send ping message!", address.String())
-
 			}
-			fmt.Println(logTime, "Send ping message!")
 		}
 	}
 }
