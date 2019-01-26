@@ -47,9 +47,7 @@ var (
 )
 
 type MasternodeData struct {
-	Index    int    `json:"index"       gencodec:"required"`
 	Id       string `json:"id"          gencodec:"required"`
-	IsActive bool   `json:"IsActive"    gencodec:"required"`
 	Data     string `json:"Data"        gencodec:"required"`
 }
 

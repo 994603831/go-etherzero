@@ -480,10 +480,10 @@ func (d *Devote) CheckWitness(lastBlock *types.Block, now int64) error {
 	if err != nil {
 		return err
 	}
-	for i, signer := range d.witnesses {
+	for _, signer := range d.witnesses {
 		if witness == signer {
 			d.signer = signer
-			log.Info("[CheckWitness] Found my witness", " witness", witness, "index", i)
+			fmt.Printf("[CheckWitness] Found my witness(%s)!\n", witness)
 			return nil
 		}
 	}

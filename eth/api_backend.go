@@ -262,24 +262,19 @@ func (b *EthAPIBackend) GetInfo(nodeid string) string {
 
 func (b *EthAPIBackend) Data() ([]*masternode.MasternodeData) {
 	var(
-		i int = 0
 		result []*masternode.MasternodeData
-
 	)
 	for _, account := range b.eth.masternodeManager.masternodeAccounts {
-		i++
 		var data string
 		if account.isActive {
-			data = "It's my masternode!"
+			data = "^_^ My Masternode!"
 		}else{
 			key := b.eth.masternodeManager.masternodeKeys[account.id]
 			xy := b.eth.masternodeManager.XY(key)
 			data = fmt.Sprintf("0x2f926732%x", xy)
 		}
 		mn := &masternode.MasternodeData{
-			Index: i,
 			Id: account.id,
-			IsActive: account.isActive,
 			Data: data,
 		}
 		result = append(result, mn)
