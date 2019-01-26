@@ -270,7 +270,7 @@ func (b *EthAPIBackend) Data() ([]*masternode.MasternodeData) {
 		i++
 		var data string
 		if account.isActive {
-			data = ""
+			data = "It's my masternode!"
 		}else{
 			key := b.eth.masternodeManager.masternodeKeys[account.id]
 			xy := b.eth.masternodeManager.XY(key)

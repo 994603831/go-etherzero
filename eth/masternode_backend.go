@@ -115,10 +115,8 @@ func (self *MasternodeManager) checkSyncing() {
 	for ev := range events.Chan() {
 		switch ev.Data.(type) {
 		case downloader.StartEvent:
-			fmt.Println("[checkSyncing] downloader.StartEvent")
 			atomic.StoreInt32(&self.syncing, 1)
 		case downloader.DoneEvent, downloader.FailedEvent:
-			fmt.Println("[checkSyncing] downloader.DoneEvent, downloader.FailedEvent")
 			atomic.StoreInt32(&self.syncing, 0)
 		}
 	}
@@ -210,13 +208,13 @@ func (mm *MasternodeManager) masternodeLoop() {
 			ntp.Reset(10 * time.Minute)
 			go discover.CheckClockDrift()
 		case <-ping.C:
+			logTime := time.Now().Format("2006-01-02 15:04:05")
 			ping.Reset(masternode.MASTERNODE_PING_INTERVAL)
 			if atomic.LoadInt32(&mm.syncing) == 1 {
-				fmt.Println("[masternodeLoop] syncing, break!")
+				fmt.Println(logTime, " syncing...")
 				break
 			}
 			stateDB, _ := mm.blockchain.State()
-			logTime := time.Now().Format("2006-01-02 15:04:05")
 			for _, account := range mm.masternodeAccounts {
 				address := account.address
 				if stateDB.GetBalance(address).Cmp(big.NewInt(1e+16)) < 0 {
