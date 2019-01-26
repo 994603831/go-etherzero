@@ -21,8 +21,6 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
-	"time"
-
 	"crypto/ecdsa"
 	"github.com/etherzero/go-etherzero/accounts/abi/bind"
 	"github.com/etherzero/go-etherzero/common"
@@ -31,6 +29,7 @@ import (
 	"github.com/etherzero/go-etherzero/log"
 	"github.com/etherzero/go-etherzero/p2p/discv5"
 	"github.com/etherzero/go-etherzero/p2p/enode"
+	"time"
 )
 
 const (
@@ -39,7 +38,6 @@ const (
 
 const (
 	MASTERNODE_PING_INTERVAL = 1200 * time.Second
-	MASTERNODE_IP_INTERVAL   = 900 * time.Second
 )
 
 var (
@@ -47,6 +45,13 @@ var (
 	errAlreadyRegistered = errors.New("masternode is already registered")
 	errNotRegistered     = errors.New("masternode is not registered")
 )
+
+type MasternodeData struct {
+	Index    int    `json:"index"       gencodec:"required"`
+	Id       string `json:"id"          gencodec:"required"`
+	IsActive bool   `json:"IsActive"    gencodec:"required"`
+	Data     string `json:"Data"        gencodec:"required"`
+}
 
 type Masternode struct {
 	ENode *enode.Node

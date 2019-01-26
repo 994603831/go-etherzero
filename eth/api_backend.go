@@ -38,6 +38,7 @@ import (
 	"encoding/hex"
 	"strings"
 	"github.com/etherzero/go-etherzero/p2p/discover"
+	"github.com/etherzero/go-etherzero/core/types/masternode"
 )
 
 // EthAPIBackend implements ethapi.Backend for full nodes
@@ -259,27 +260,31 @@ func (b *EthAPIBackend) GetInfo(nodeid string) string {
 		info.BlockOnlineAcc.String(), info.BlockLastPing.String())
 }
 
-// Data
-// Masternodes return masternode contract data
-func (b *EthAPIBackend) Data() (strPromotion string) {
-	if b.eth.masternodeManager.srvr.Self() == nil {
-		strPromotion = "wait for more 10 seconds to initial the geth"
-		return
-	}
-	xy := b.eth.masternodeManager.srvr.Self().XY()
+func (b *EthAPIBackend) Data() ([]*masternode.MasternodeData) {
+	var(
+		i int = 0
+		result []*masternode.MasternodeData
 
-	var id [8]byte
-	copy(id[:], xy[0:8])
-	has, err := b.eth.masternodeManager.contract.Has(nil, id)
-	if err != nil {
-		fmt.Errorf("contract.Has error %v", err)
-		return
+	)
+	for _, account := range b.eth.masternodeManager.masternodeAccounts {
+		i++
+		var data string
+		if account.isActive {
+			data = ""
+		}else{
+			key := b.eth.masternodeManager.masternodeKeys[account.id]
+			xy := b.eth.masternodeManager.XY(key)
+			data = fmt.Sprintf("0x2f926732%x", xy)
+		}
+		mn := &masternode.MasternodeData{
+			Index: i,
+			Id: account.id,
+			IsActive: account.isActive,
+			Data: data,
+		}
+		result = append(result, mn)
 	}
-	if has {
-		strPromotion = fmt.Sprintf("### It's already been a masternode!,don't send your masternode data any more!")
-	}
-	data := "0x2f926732" + common.Bytes2Hex(xy[:])
-	return fmt.Sprintf("%v your masternode data is %v", strPromotion, data)
+	return result
 }
 
 // Masternodes return masternode contract data

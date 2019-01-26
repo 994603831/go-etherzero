@@ -137,6 +137,7 @@ type Devote struct {
 
 	signer                      string        // master node nodeid
 	signFn                      SignerFn      // signature function
+	witnesses                   []string
 	signatures                  *lru.ARCCache // Signatures of recent blocks to speed up mining
 	confirmedBlockHeader        *types.Header
 	masternodeListFn            MasternodeListFn             //get current all masternodes
@@ -479,11 +480,14 @@ func (d *Devote) CheckWitness(lastBlock *types.Block, now int64) error {
 	if err != nil {
 		return err
 	}
-	log.Info("devote checkWitness lookup", " witness", witness, "signer", d.signer)
-	if (witness == "") || witness != d.signer {
-		return ErrInvalidBlockWitness
+	for i, signer := range d.witnesses {
+		if witness == signer {
+			d.signer = signer
+			log.Info("[CheckWitness] Found my witness", " witness", witness, "index", i)
+			return nil
+		}
 	}
-	return nil
+	return ErrInvalidBlockWitness
 }
 
 // Seal generates a new block for the given input block with the local miner's
@@ -524,13 +528,13 @@ func (d *Devote) CalcDifficulty(chain consensus.ChainReader, time uint64, parent
 	return big.NewInt(1)
 }
 
-func (d *Devote) Authorize(signer string, signFn SignerFn) {
+func (d *Devote) Authorize(witnesses []string, signFn SignerFn) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	d.signer = signer
+	d.witnesses = witnesses
 	d.signFn = signFn
-	log.Info("devote Authorize ", "signer", signer)
+	log.Info("devote Authorize ", "signer", len(d.witnesses))
 }
 
 func (d *Devote) Masternodes(masternodeListFn MasternodeListFn) {

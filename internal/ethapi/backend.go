@@ -26,6 +26,7 @@ import (
 	"github.com/etherzero/go-etherzero/core"
 	"github.com/etherzero/go-etherzero/core/state"
 	"github.com/etherzero/go-etherzero/core/types"
+	"github.com/etherzero/go-etherzero/core/types/masternode"
 	"github.com/etherzero/go-etherzero/core/vm"
 	"github.com/etherzero/go-etherzero/eth/downloader"
 	"github.com/etherzero/go-etherzero/ethdb"
@@ -46,12 +47,12 @@ type Backend interface {
 	AccountManager() *accounts.Manager
 
 	// masternode control api
-	Masternodes() []string        // masternodes info
-	Data() string                 // return masternode contract nodes data
-	GetInfo(nodeid string) string // return related info in masternode contract
-	StartMasternode() bool        // start the masternode,hash ,srvr means two different parameters
-	StopMasternode() bool         // stop the masternode,hash ,srvr means two different parameters
-	Ns() int64                    // nanoseconds
+	Masternodes() []string              // masternodes info
+	Data() []*masternode.MasternodeData // return masternode contract nodes data
+	GetInfo(nodeid string) string       // return related info in masternode contract
+	StartMasternode() bool              // start the masternode,hash ,srvr means two different parameters
+	StopMasternode() bool               // stop the masternode,hash ,srvr means two different parameters
+	Ns() int64                          // nanoseconds
 
 	// BlockChain API
 	SetHead(number uint64)

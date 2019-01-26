@@ -52,7 +52,6 @@ import (
 	"github.com/etherzero/go-etherzero/consensus/devote"
 	"github.com/etherzero/go-etherzero/contracts/masternode/contract"
 	"time"
-	"github.com/etherzero/go-etherzero/core/types/devotedb"
 )
 
 type LesServer interface {
@@ -182,11 +181,9 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 		return nil, err
 	}
 
-	devoteDB, err := devotedb.NewDevoteByProtocol(devotedb.NewDatabase(eth.chainDb), eth.blockchain.CurrentBlock().Header().Protocol)
-
 	contractBackend := NewContractBackend(eth)
 	contract, err := contract.NewContract(params.MasterndeContractAddress, contractBackend)
-	if eth.masternodeManager = NewMasternodeManager(devoteDB, eth.blockchain, contract, eth.txPool); err != nil {
+	if eth.masternodeManager = NewMasternodeManager(eth.blockchain, contract, eth.txPool); err != nil {
 		return nil, err
 	}
 	eth.protocolManager.mm = eth.masternodeManager
@@ -419,28 +416,6 @@ func (s *Ethereum) SetEtherbase(etherbase common.Address) {
 	s.miner.SetEtherbase(etherbase)
 }
 
-func (s *Ethereum) Witness() (witness string, err error) {
-	s.lock.RLock()
-	witness = s.witness
-	s.lock.RUnlock()
-
-	if witness != "" {
-		return witness, nil
-	}
-	if s.masternodeManager.active != nil {
-		fmt.Printf("backend Witness accounts: %s \n", s.masternodeManager.active.ID)
-		return s.masternodeManager.active.ID, nil
-	}
-	return "", fmt.Errorf("Witness  must be explicitly specified")
-}
-
-// set in js console via admin interface or wrapper from cli flags
-func (self *Ethereum) SetWitness(witness string) {
-	self.lock.Lock()
-	self.witness = witness
-	self.lock.Unlock()
-}
-
 // StartMining starts the miner with the given number of CPU threads. If mining
 // is already running, this method adjust the number of threads allowed to use
 // and updates the minimum price required by the transaction pool.
@@ -470,19 +445,12 @@ func (s *Ethereum) StartMining(threads int) error {
 			log.Error("Cannot start mining without etherbase", "err", err)
 			return fmt.Errorf("etherbase missing: %v", err)
 		}
-		witness, err := s.Witness()
-		fmt.Printf("backend StartMining witness:%s\n", witness)
-		if err != nil {
-			log.Error("Cannot start mining without Witness", "err", err)
-			return fmt.Errorf("Witness missing: %v", err)
-		}
-		active := s.masternodeManager.active
-		if active == nil {
-			log.Error("Active Masternode is nil")
-			return fmt.Errorf("signer missing: %v", errors.New("Active Masternode is nil"))
+		witnesses := s.masternodeManager.GetWitnesses()
+		if len(witnesses) == 0 {
+			return fmt.Errorf("Cannot start mining without Witness")
 		}
 		if devote, ok := s.engine.(*devote.Devote); ok {
-			devote.Authorize(witness, active.SignHash)
+			devote.Authorize(witnesses, s.masternodeManager.SignHash)
 		}
 		if clique, ok := s.engine.(*clique.Clique); ok {
 			wallet, err := s.accountManager.Find(accounts.Account{Address: eb})
@@ -529,7 +497,6 @@ func (s *Ethereum) IsListening() bool                  { return true } // Always
 func (s *Ethereum) EthVersion() int                    { return int(s.protocolManager.SubProtocols[0].Version) }
 func (s *Ethereum) NetVersion() uint64                 { return s.networkID }
 func (s *Ethereum) Downloader() *downloader.Downloader { return s.protocolManager.downloader }
-func (s *Ethereum) DevoteDB() *devotedb.DevoteDB       { return s.masternodeManager.devoteDB }
 
 // Protocols implements node.Service, returning all the currently configured
 // network protocols to start.
@@ -568,19 +535,11 @@ func (s *Ethereum) Start(srvr *p2p.Server) error {
 }
 
 func (s *Ethereum) startMasternode(srvr *p2p.Server) {
-	t := time.NewTimer(5 * time.Second)
-	for {
-		select {
-		case <-t.C:
-			if s.Downloader().Synchronising() {
-				t.Reset(5 * time.Second)
-				break
-			}
-			s.masternodeManager.Start(srvr, s.protocolManager.peers, s.Downloader())
-			break
-		}
+	t := time.NewTimer(3 * time.Second)
+	select {
+	case <-t.C:
+		s.masternodeManager.Start(srvr, s.EventMux())
 	}
-
 }
 
 // Stop implements node.Service, terminating all internal goroutines used by the

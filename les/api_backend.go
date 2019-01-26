@@ -36,6 +36,7 @@ import (
 	"github.com/etherzero/go-etherzero/light"
 	"github.com/etherzero/go-etherzero/params"
 	"github.com/etherzero/go-etherzero/rpc"
+	"github.com/etherzero/go-etherzero/core/types/masternode"
 )
 
 type LesApiBackend struct {
@@ -209,8 +210,8 @@ func (b *LesApiBackend) Masternodes() []string {
 }
 
 // Data return masternode contract data
-func (b *LesApiBackend) Data() string {
-	return ""
+func (b *LesApiBackend) Data() []*masternode.MasternodeData {
+	return nil
 }
 
 

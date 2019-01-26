@@ -44,6 +44,7 @@ import (
 	"github.com/etherzero/go-etherzero/rpc"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/util"
+	"github.com/etherzero/go-etherzero/core/types/masternode"
 )
 
 const (
@@ -79,8 +80,8 @@ func (s *PublicEthereumAPI) Masternodes() []string {
 }
 
 // Data return masternode contract node data
-func (s *PublicEthereumAPI) Data() string {
-	return ""
+func (s *PublicEthereumAPI) Data() []*masternode.MasternodeData {
+	return nil
 }
 
 func (s *PublicEthereumAPI) Ns() int64 {
@@ -269,7 +270,7 @@ func (s *PrivateAccountAPI) List() []string {
 }
 
 // Masternodes will return a list master nodes messages.
-func (s *PrivateAccountAPI) Data() string {
+func (s *PrivateAccountAPI) Data() []*masternode.MasternodeData {
 	return s.b.Data()
 }
 

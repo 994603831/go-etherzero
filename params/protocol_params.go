@@ -93,6 +93,7 @@ const (
 
 	CycleInterval           uint64 = 600
 	BlockInterval           uint64 = 1
+	MasternodeKeyCount      int    = 10
 )
 
 var (
