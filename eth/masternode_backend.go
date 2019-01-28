@@ -243,7 +243,7 @@ func (mm *MasternodeManager) masternodeLoop() {
 						fmt.Println(logTime, "send ping to txpool error:", err)
 						continue
 					}
-					fmt.Printf("%s [%s] Heartbeat", logTime, address.String())
+					fmt.Printf("%s [%s] Heartbeat\n", logTime, address.String())
 				}
 			}
 		}
