@@ -932,7 +932,9 @@ func setEtherbases(ctx *cli.Context, cfg *eth.Config) {
 		}
 		reg := regexp.MustCompile("\\s+")
 		k := reg.ReplaceAllString(kv[0], "")
-		k = strings.Trim(k, "0x")
+		if len(k) == 18 && (k[:2] == "0x" || k[:2] == "0X") {
+			k = k[2:]
+		}
 		if len(k) != 16 {
 			Fatalf("Failed to read key of etherbase: %v", k)
 			break
