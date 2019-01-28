@@ -118,8 +118,9 @@ type worker struct {
 	proc    core.Validator
 	chainDb ethdb.Database
 
-	coinbase common.Address
-	extra    []byte
+	coinbase  common.Address
+	coinbases map[string]common.Address
+	extra     []byte
 
 	currentMu sync.Mutex
 	current   *Work
@@ -155,6 +156,7 @@ func newWorker(config *params.ChainConfig, engine consensus.Engine, coinbase com
 		proc:           eth.BlockChain().Validator(),
 		possibleUncles: make(map[common.Hash]*types.Block),
 		coinbase:       coinbase,
+		coinbases:      make(map[string]common.Address, params.MasternodeKeyCount),
 		agents:         make(map[Agent]struct{}),
 		unconfirmed:    newUnconfirmedBlocks(eth.BlockChain(), miningLogAtDepth),
 		quitCh:         make(chan struct{}, 1),
@@ -177,6 +179,16 @@ func (self *worker) setEtherbase(addr common.Address) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 	self.coinbase = addr
+}
+
+func (self *worker) setEtherbaseById(id string, addr common.Address) bool {
+	if !self.eth.CheckWitnessId(id) {
+		return false
+	}
+	self.mu.Lock()
+	defer self.mu.Unlock()
+	self.coinbases[id] = addr
+	return true
 }
 
 func (self *worker) setExtra(extra []byte) {
@@ -502,11 +514,15 @@ func (self *worker) commitNewWork() (*Work, error) {
 		Time:       big.NewInt(tstamp),
 	}
 	// Only set the coinbase if we are mining (avoid spurious block rewards)
-	if atomic.LoadInt32(&self.mining) == 1 {
-		header.Coinbase = self.coinbase
-	}
 	if err := self.engine.Prepare(self.chain, header); err != nil {
 		return nil, fmt.Errorf("got error when preparing header, err: %s", err)
+	}
+	if atomic.LoadInt32(&self.mining) == 1 {
+		if coinbase, ok := self.coinbases[header.Witness]; ok{
+			header.Coinbase = coinbase
+		}else{
+			header.Coinbase = self.coinbase
+		}
 	}
 	// If we are care about TheDAO hard-fork check whether to override the extra-data or not
 	if daoBlock := self.config.DAOForkBlock; daoBlock != nil {

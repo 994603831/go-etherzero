@@ -30,7 +30,9 @@ import (
 	"github.com/etherzero/go-etherzero/common/hexutil"
 	"github.com/etherzero/go-etherzero/consensus"
 	"github.com/etherzero/go-etherzero/consensus/clique"
+	"github.com/etherzero/go-etherzero/consensus/devote"
 	"github.com/etherzero/go-etherzero/consensus/ethash"
+	"github.com/etherzero/go-etherzero/contracts/masternode/contract"
 	"github.com/etherzero/go-etherzero/core"
 	"github.com/etherzero/go-etherzero/core/bloombits"
 	"github.com/etherzero/go-etherzero/core/rawdb"
@@ -49,8 +51,6 @@ import (
 	"github.com/etherzero/go-etherzero/params"
 	"github.com/etherzero/go-etherzero/rlp"
 	"github.com/etherzero/go-etherzero/rpc"
-	"github.com/etherzero/go-etherzero/consensus/devote"
-	"github.com/etherzero/go-etherzero/contracts/masternode/contract"
 	"time"
 )
 
@@ -87,14 +87,15 @@ type Ethereum struct {
 
 	APIBackend *EthAPIBackend
 
-	miner     *miner.Miner
-	gasPrice  *big.Int
-	etherbase common.Address
+	miner             *miner.Miner
+	gasPrice          *big.Int
+	etherbase         common.Address
+	etherbases        map[string]common.Address
 	witness           string
-	networkID     uint64
-	netRPCService *ethapi.PublicNetAPI
+	networkID         uint64
+	netRPCService     *ethapi.PublicNetAPI
 	masternodeManager *MasternodeManager
-	lock sync.RWMutex // Protects the variadic fields (e.g. gas price and etherbase)
+	lock              sync.RWMutex // Protects the variadic fields (e.g. gas price and etherbase)
 }
 
 func (s *Ethereum) AddLesServer(ls LesServer) {
@@ -138,6 +139,7 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 		networkID:      config.NetworkId,
 		gasPrice:       config.MinerGasPrice,
 		etherbase:      config.Etherbase,
+		etherbases:     config.Etherbases,
 		witness:        config.Witness,
 		bloomRequests:  make(chan chan *bloombits.Retrieval),
 		bloomIndexer:   NewBloomIndexer(chainDb, params.BloomBitsBlocks, params.BloomConfirms),
@@ -416,6 +418,14 @@ func (s *Ethereum) SetEtherbase(etherbase common.Address) {
 	s.miner.SetEtherbase(etherbase)
 }
 
+func (s *Ethereum) SetEtherbaseById(id string, etherbase common.Address) bool {
+	s.lock.Lock()
+	s.etherbases[id] = etherbase
+	s.lock.Unlock()
+
+	return s.miner.SetEtherbaseById(id, etherbase)
+}
+
 // StartMining starts the miner with the given number of CPU threads. If mining
 // is already running, this method adjust the number of threads allowed to use
 // and updates the minimum price required by the transaction pool.
@@ -497,6 +507,7 @@ func (s *Ethereum) IsListening() bool                  { return true } // Always
 func (s *Ethereum) EthVersion() int                    { return int(s.protocolManager.SubProtocols[0].Version) }
 func (s *Ethereum) NetVersion() uint64                 { return s.networkID }
 func (s *Ethereum) Downloader() *downloader.Downloader { return s.protocolManager.downloader }
+func (s *Ethereum) CheckWitnessId(id string) bool      { return s.masternodeManager.CheckMasternodeId(id) }
 
 // Protocols implements node.Service, returning all the currently configured
 // network protocols to start.

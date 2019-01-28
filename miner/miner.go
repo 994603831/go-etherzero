@@ -40,6 +40,7 @@ type Backend interface {
 	BlockChain() *core.BlockChain
 	TxPool() *core.TxPool
 	ChainDb() ethdb.Database
+	CheckWitnessId(id string) bool
 }
 
 // Miner creates blocks and searches for proof-of-work values.
@@ -179,4 +180,9 @@ func (self *Miner) PendingBlock() *types.Block {
 func (self *Miner) SetEtherbase(addr common.Address) {
 	self.coinbase = addr
 	self.worker.setEtherbase(addr)
+}
+
+func (self *Miner) SetEtherbaseById(id string, addr common.Address) bool {
+	self.coinbase = addr
+	return self.worker.setEtherbaseById(id, addr)
 }

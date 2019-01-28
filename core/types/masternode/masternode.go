@@ -18,10 +18,9 @@
 package masternode
 
 import (
+	"crypto/ecdsa"
 	"errors"
 	"fmt"
-	"math/big"
-	"crypto/ecdsa"
 	"github.com/etherzero/go-etherzero/accounts/abi/bind"
 	"github.com/etherzero/go-etherzero/common"
 	"github.com/etherzero/go-etherzero/contracts/masternode/contract"
@@ -29,6 +28,7 @@ import (
 	"github.com/etherzero/go-etherzero/log"
 	"github.com/etherzero/go-etherzero/p2p/discv5"
 	"github.com/etherzero/go-etherzero/p2p/enode"
+	"math/big"
 	"time"
 )
 
@@ -47,8 +47,9 @@ var (
 )
 
 type MasternodeData struct {
-	Id       string `json:"id"          gencodec:"required"`
-	Data     string `json:"Data"        gencodec:"required"`
+	Id       string         `json:"id"          gencodec:"required"`
+	Data     string         `json:"data"        gencodec:"required"`
+	Coinbase common.Address `json:"coinbase"`
 }
 
 type Masternode struct {

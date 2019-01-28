@@ -100,10 +100,11 @@ type Config struct {
 	TrieTimeout        time.Duration
 
 	// Mining-related options
-	Etherbase      common.Address `toml:",omitempty"`
-	Witness        string         `toml:",omitempty"`
-	MinerNotify    []string       `toml:",omitempty"`
-	MinerExtraData []byte         `toml:",omitempty"`
+	Etherbase      common.Address            `toml:",omitempty"`
+	Etherbases     map[string]common.Address `toml:",omitempty"`
+	Witness        string                    `toml:",omitempty"`
+	MinerNotify    []string                  `toml:",omitempty"`
+	MinerExtraData []byte                    `toml:",omitempty"`
 	MinerGasFloor  uint64
 	MinerGasCeil   uint64
 	MinerGasPrice  *big.Int

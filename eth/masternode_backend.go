@@ -122,6 +122,13 @@ func (self *MasternodeManager) checkSyncing() {
 	}
 }
 
+func (self *MasternodeManager) CheckMasternodeId(id string) bool{
+	if _, ok := self.masternodeKeys[id]; ok {
+		return true
+	}
+	return false
+}
+
 // SignHash calculates a ECDSA signature for the given hash. The produced
 // signature is in the [R || S || V] format where V is 0 or 1.
 func (self *MasternodeManager) SignHash(id string, hash []byte) ([]byte, error) {

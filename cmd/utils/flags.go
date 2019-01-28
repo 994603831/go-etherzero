@@ -58,6 +58,7 @@ import (
 	"github.com/etherzero/go-etherzero/params"
 	whisper "github.com/etherzero/go-etherzero/whisper/whisperv6"
 	"gopkg.in/urfave/cli.v1"
+	"regexp"
 )
 
 var (
@@ -361,10 +362,20 @@ var (
 		Usage: "Public address for block mining rewards (default = first account)",
 		Value: "0",
 	}
+	MinerEtherbasesFlag = cli.StringFlag{
+		Name:  "miner.etherbases",
+		Usage: "Public address for block mining rewards (id=address,id=address,...)",
+		Value: "",
+	}
 	MinerLegacyEtherbaseFlag = cli.StringFlag{
 		Name:  "etherbase",
 		Usage: "Public address for block mining rewards (default = first account, deprecated, use --miner.etherbase)",
 		Value: "0",
+	}
+	MinerLegacyEtherbasesFlag = cli.StringFlag{
+		Name:  "etherbases",
+		Usage: "Public address for block mining rewards (id=address,id=address,...)",
+		Value: "",
 	}
 	MinerExtraDataFlag = cli.StringFlag{
 		Name:  "miner.extradata",
@@ -895,6 +906,40 @@ func setEtherbase(ctx *cli.Context, ks *keystore.KeyStore, cfg *eth.Config) {
 	}
 }
 
+func setEtherbases(ctx *cli.Context, cfg *eth.Config) {
+	//etherbases := make(map[string]common.Address, params.MasternodeKeyCount)
+	var src string
+	if ctx.GlobalIsSet(MinerLegacyEtherbasesFlag.Name) {
+		src = ctx.GlobalString(MinerLegacyEtherbasesFlag.Name)
+	}
+	if ctx.GlobalIsSet(MinerEtherbasesFlag.Name) {
+		src = ctx.GlobalString(MinerEtherbasesFlag.Name)
+	}
+	etherbaseKVs := strings.Split(src, ",")
+	etherbases := make(map[string]common.Address, 10)
+	for i, KVs := range etherbaseKVs {
+		if i > params.MasternodeKeyCount {
+			Fatalf("Too many etherbase: %v", len(etherbaseKVs))
+			break
+		}
+		kv := strings.Split(KVs, "=")
+		if(len(kv) != 2) {
+			Fatalf("Failed to read etherbase: %v", kv)
+			break
+		}
+		reg := regexp.MustCompile("\\s+")
+		k := reg.ReplaceAllString(kv[0], "")
+		k = strings.Trim(k, "0x")
+		if len(k) != 16 {
+			Fatalf("Failed to read key of etherbase: %v", k)
+			break
+		}
+		v := reg.ReplaceAllString(kv[1], "")
+		etherbases[k] = common.HexToAddress(v)
+	}
+	cfg.Etherbases = etherbases
+}
+
 // MakePasswordList reads password lines from the file specified by the global --password flag.
 func MakePasswordList(ctx *cli.Context) []string {
 	path := ctx.GlobalString(PasswordFileFlag.Name)
@@ -1150,6 +1195,7 @@ func SetEthConfig(ctx *cli.Context, stack *node.Node, cfg *eth.Config) {
 
 	ks := stack.AccountManager().Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
 	setEtherbase(ctx, ks, cfg)
+	setEtherbases(ctx, cfg)
 	setGPO(ctx, &cfg.GPO)
 	setTxPool(ctx, &cfg.TxPool)
 	setEthash(ctx, cfg)

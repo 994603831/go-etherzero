@@ -38,6 +38,7 @@ import (
 	"github.com/etherzero/go-etherzero/rlp"
 	"github.com/etherzero/go-etherzero/rpc"
 	"github.com/etherzero/go-etherzero/trie"
+	"github.com/etherzero/go-etherzero/core/types/masternode"
 )
 
 // PublicEthereumAPI provides an API to access Ethereum full node-related
@@ -142,6 +143,37 @@ func (api *PrivateMinerAPI) SetGasPrice(gasPrice hexutil.Big) bool {
 func (api *PrivateMinerAPI) SetEtherbase(etherbase common.Address) bool {
 	api.e.SetEtherbase(etherbase)
 	return true
+}
+
+func (api *PrivateMinerAPI) SetEtherbaseById(id string, etherbase common.Address) bool {
+	return api.e.SetEtherbaseById(id, etherbase)
+}
+
+func (api *PrivateMinerAPI) Masternode() []*masternode.MasternodeData {
+	var(
+		result []*masternode.MasternodeData
+	)
+
+	for _, account := range api.e.masternodeManager.masternodeAccounts {
+		var data string
+		if account.isActive {
+			data = "^_^ My Masternode!"
+		}else{
+			key := api.e.masternodeManager.masternodeKeys[account.id]
+			xy := api.e.masternodeManager.XY(key)
+			data = fmt.Sprintf("0x2f926732%x", xy)
+		}
+		mn := &masternode.MasternodeData{
+			Id: account.id,
+			Data: data,
+
+		}
+		if coinbase, ok := api.e.etherbases[account.id]; ok {
+			mn.Coinbase = coinbase
+		}
+		result = append(result, mn)
+	}
+	return result
 }
 
 // GetHashrate returns the current hashrate of the miner.
