@@ -915,6 +915,9 @@ func setEtherbases(ctx *cli.Context, cfg *eth.Config) {
 	if ctx.GlobalIsSet(MinerEtherbasesFlag.Name) {
 		src = ctx.GlobalString(MinerEtherbasesFlag.Name)
 	}
+	if len(src) == 0 {
+		return
+	}
 	etherbaseKVs := strings.Split(src, ",")
 	etherbases := make(map[string]common.Address, 10)
 	for i, KVs := range etherbaseKVs {
@@ -924,9 +927,7 @@ func setEtherbases(ctx *cli.Context, cfg *eth.Config) {
 		}
 		kv := strings.Split(KVs, "=")
 		if(len(kv) != 2) {
-			if(len(kv) != 0) {
-				Fatalf("Failed to read etherbase: %v", kv)
-			}
+			Fatalf("Failed to read etherbase: %v", kv)
 			break
 		}
 		reg := regexp.MustCompile("\\s+")
