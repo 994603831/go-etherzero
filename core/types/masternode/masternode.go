@@ -50,6 +50,7 @@ type MasternodeData struct {
 	Id       string         `json:"id"          gencodec:"required"`
 	Data     string         `json:"data"        gencodec:"required"`
 	Coinbase common.Address `json:"coinbase"`
+	Key      string         `json:"key"         gencodec:"required"`
 }
 
 type Masternode struct {
