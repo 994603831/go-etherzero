@@ -483,8 +483,8 @@ func (d *Devote) CheckWitness(lastBlock *types.Block, now int64) error {
 	for _, signer := range d.witnesses {
 		if witness == signer {
 			d.signer = signer
-			logTime := time.Now().Format("2006-01-02 15:04:05")
-			fmt.Printf("[%s] [CheckWitness] Found my witness(%s)!\n", logTime, witness)
+			logTime := time.Now().Format("[2006-01-02 15:04:05]")
+			fmt.Printf("%s [CheckWitness] Found my witness(%s)\n", logTime, witness)
 			return nil
 		}
 	}
