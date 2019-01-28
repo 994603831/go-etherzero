@@ -208,7 +208,7 @@ func (mm *MasternodeManager) masternodeLoop() {
 			ntp.Reset(10 * time.Minute)
 			go discover.CheckClockDrift()
 		case <-ping.C:
-			logTime := time.Now().Format("2006-01-02 15:04:05")
+			logTime := time.Now().Format("[2006-01-02 15:04:05]")
 			ping.Reset(masternode.MASTERNODE_PING_INTERVAL)
 			if atomic.LoadInt32(&mm.syncing) == 1 {
 				fmt.Println(logTime, " syncing...")
