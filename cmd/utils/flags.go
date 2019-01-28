@@ -924,7 +924,9 @@ func setEtherbases(ctx *cli.Context, cfg *eth.Config) {
 		}
 		kv := strings.Split(KVs, "=")
 		if(len(kv) != 2) {
-			Fatalf("Failed to read etherbase: %v", kv)
+			if(len(kv) != 0) {
+				Fatalf("Failed to read etherbase: %v", kv)
+			}
 			break
 		}
 		reg := regexp.MustCompile("\\s+")
