@@ -66,6 +66,8 @@ func New(eth Backend, config *params.ChainConfig, mux *event.TypeMux, engine con
 		engine:   engine,
 		worker:   newWorker(config, engine, common.Address{}, eth, mux),
 		canStart: 1,
+
+		coinbases: make(map[string]common.Address, params.MasternodeKeyCount),
 	}
 	//miner.Register(NewCpuAgent(eth.BlockChain(), engine))
 	go miner.update()
