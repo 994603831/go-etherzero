@@ -149,7 +149,7 @@ func (api *PrivateMinerAPI) SetEtherbaseById(id string, etherbase common.Address
 	return api.e.SetEtherbaseById(id, etherbase)
 }
 
-func (api *PrivateMinerAPI) Masternode() []*masternode.MasternodeData {
+func (api *PrivateMinerAPI) Masternodes() []*masternode.MasternodeData {
 	var(
 		result []*masternode.MasternodeData
 	)

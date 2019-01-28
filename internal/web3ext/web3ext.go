@@ -532,10 +532,6 @@ web3._extend({
 			inputFormatter: [null, web3._extend.formatters.inputAddressFormatter]
 		}),
 		new web3._extend.Method({
-			name: 'masternode',
-			call: 'miner_masternode'
-		}),
-		new web3._extend.Method({
 			name: 'setExtra',
 			call: 'miner_setExtra',
 			params: 1
@@ -556,7 +552,12 @@ web3._extend({
 			call: 'miner_getHashrate'
 		}),
 	],
-	properties: []
+	properties: [
+		new web3._extend.Property({
+			name: 'masternodes',
+			getter: 'miner_masternodes'
+		}),
+    ]
 });
 `
 
