@@ -49,10 +49,11 @@ type Miner struct {
 
 	worker *worker
 
-	coinbase common.Address
-	mining   int32
-	eth      Backend
-	engine   consensus.Engine
+	coinbase  common.Address
+	coinbases map[string]common.Address
+	mining    int32
+	eth       Backend
+	engine    consensus.Engine
 
 	canStart    int32 // can start indicates whether we can start the mining operation
 	shouldStart int32 // should start indicates whether we should start after sync
@@ -94,7 +95,7 @@ out:
 			atomic.StoreInt32(&self.canStart, 1)
 			atomic.StoreInt32(&self.shouldStart, 0)
 			if shouldStart {
-				self.Start(self.coinbase)
+				self.Start(self.coinbase, self.coinbases)
 			}
 			// unsubscribe. we're only interested in this event once
 			events.Unsubscribe()
@@ -104,10 +105,16 @@ out:
 	}
 }
 
-func (self *Miner) Start(coinbase common.Address) {
+func (self *Miner) Start(coinbase common.Address, coinbases map[string]common.Address) {
 	atomic.StoreInt32(&self.shouldStart, 1)
 	self.SetEtherbase(coinbase)
-
+	if coinbases != nil {
+		for id, address := range coinbases {
+			if !self.SetEtherbaseById(id, address) {
+				log.Error("SetEtherbaseById Error", "id", id, "address", address)
+			}
+		}
+	}
 	if atomic.LoadInt32(&self.canStart) == 0 {
 		log.Info("Network syncing, will start miner afterwards")
 		return
@@ -183,6 +190,6 @@ func (self *Miner) SetEtherbase(addr common.Address) {
 }
 
 func (self *Miner) SetEtherbaseById(id string, addr common.Address) bool {
-	self.coinbase = addr
+	self.coinbases[id] = addr
 	return self.worker.setEtherbaseById(id, addr)
 }
